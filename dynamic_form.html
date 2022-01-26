@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+
+    <!-- production version, optimized for size and speed -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <!-- axios cdn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js"></script>
+  </head>
+  <body>
+    <div id="app" class="container mt-5">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>name</th>
+            <th>major</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item,index) in dataSet">
+            <td scope="row">{{item.p_id}}</td>
+            <td>{{item.p_name}}</td>
+            <td>
+              <li v-for="i in item.major">{{i.mj_name}}</li>
+              <br />
+              <div class="container">
+                <form v-if="alerFormMj">
+                  <div class="form-group row">
+                    <div class="col-sm-1-12">
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="inputName"
+                        id="inputName"
+                        placeholder=""
+                      />
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <br />
+              <button
+                type="button"
+                class="btn btn-sm btn-warning"
+                data-toggle="modal"
+                data-target="#ModalMejor"
+                @click="alertAddMejorForm(item)"
+              >
+                addMajor
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br />
+
+      <button
+        type="button"
+        class="btn btn-success"
+        data-toggle="modal"
+        data-target="#addPersonModal"
+      >
+        addPerson
+      </button>
+
+      <!-- Modal -->
+      <form action="" method="post" @submit.prevent="addMember">
+        <div
+          class="modal fade"
+          id="addPersonModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="addPersonTitle"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addPersonTitle">เพิ่มสมาชิก</h5>
+                <button
+                  type="button"
+                  class="close"
+                  data-dismiss="modal"
+                  @click="clearMemberForm"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="container">
+                  <form>
+                    <div class="form-group row">
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="inputName"
+                        v-model.trim="memberPayload.p_name"
+                        id="inputName"
+                        placeholder="ชื่อสมาชิก"
+                      />
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                  @click="clearMemberForm"
+                >
+                  Close
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Save changes
+                </button>
+              </div>
+            </div>
+            <!-- modal content -->
+          </div>
+        </div>
+      </form>
+      <!-- Modal -->
+
+      <form action="" method="post" @submit.prevent="addMejor">
+        <div
+          class="modal fade"
+          id="ModalMejor"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="ModalMejorTitle"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="ModalMejorTitle">
+                  Add Mojor P_ID : {{ mejorPayload.p_id}}
+                </h5>
+                <button
+                  type="button"
+                  class="close"
+                  data-dismiss="modal"
+                  @click="clearMejorForm"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label for="">Add Major</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id=""
+                    v-model.tirm="mejorPayload.mj_name"
+                    aria-describedby="textHelp"
+                    placeholder="Enter major"
+                  />
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                  @click="clearMejorForm"
+                >
+                  Close
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Save changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      var app = new Vue({
+        el: "#app",
+        async mounted() {
+          await this.getPersons();
+          await this.getMajors();
+          await this.filterData();
+        },
+        data() {
+          return {
+            memberList: [
+              { id: 1, name: "a", major: ["mj_name1", "mk"] },
+              { id: 2, name: "b", major: ["ac", "bc", "va"] },
+            ],
+            alerFormMj: false,
+            persons: null,
+            majors: null,
+            dataSet: [],
+            selectPid: [],
+            memberPayload: { p_name: "" },
+            mejorPayload: {
+              p_id: null,
+              mj_name: "",
+            },
+          };
+        },
+        methods: {
+          async getPersons() {
+            try {
+              const { data } = await axios.get("./api/get_persons.php");
+              this.persons = data;
+              console.log("data", data);
+            } catch (error) {
+              return Promise.reject(error);
+            }
+          },
+          async getMajors() {
+            try {
+              const { data } = await axios.get("./api/get_majors.php");
+              this.majors = data;
+              console.log("major", data);
+            } catch (error) {
+              return Promise.reject(error);
+            }
+          },
+          filterData() {
+            this.dataSet = this.persons.map((element) => {
+              const result = this.majors.filter(
+                (mj) => mj.p_id == element.p_id
+              );
+              return {
+                p_id: element.p_id,
+                p_name: element.p_name,
+                major: result,
+              };
+            });
+
+            console.log("this.dataSet", this.dataSet);
+
+            const result = this.majors.filter((person) => {
+              return person.p_id == 2;
+            });
+            // console.log("result", result);
+          },
+          async refreshData() {
+            await this.getPersons();
+            await this.getMajors();
+            await this.filterData();
+          },
+          onSubmit() {
+            console.log("this.memberList", this.memberList);
+          },
+          alertAddMejorForm(item) {
+            console.log("item", item);
+            this.mejorPayload.p_id = item.p_id;
+          },
+          addMejor() {
+            // console.log("this.mejorPayload", this.mejorPayload);
+            axios
+              .post("./api/insert_major.php", this.mejorPayload)
+              .then((result) => {
+                this.refreshData();
+                $("#ModalMejor").modal("hide");
+                console.log("result", result);
+              })
+              .catch((error) => {
+                console.log(error);
+                return Promise.reject(error);
+              });
+          },
+          addMember() {
+            // console.log("this.memberPayload", this.memberPayload);
+            axios
+              .post("./api/insert_person.php", this.memberPayload)
+              .then((result) => {
+                this.refreshData();
+                $("#addPersonModal").modal("hide");
+                console.log("result", result);
+              })
+              .catch((error) => {
+                console.log(error);
+                return Promise.reject(error);
+              });
+          },
+          clearMemberForm() {
+            this.memberPayload.p_name = "";
+          },
+          clearMejorForm() {
+            this.mejorPayload = {
+              p_id: null,
+              mj_name: "",
+            };
+          },
+        },
+      });
+    </script>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
